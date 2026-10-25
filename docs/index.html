@@ -122,8 +122,14 @@
           <button id="btnSaveSettings" class="btn primary">Speichern &amp; testen</button>
           <button id="btnDemo" class="btn ghost">Demo-Modus</button>
         </div>
-        <button id="btnShareSetup" class="btn ghost">Einrichtungslink für weitere Handys teilen</button>
-        <p class="muted small">Der Link enthält URL und Schlüssel – nur an Mitsammler schicken.</p>
+        <div id="setupShare" class="setup-share">
+          <p class="share-title">Weiteres Handy verbinden</p>
+          <div class="row">
+            <button id="btnShowQr" class="btn primary">QR-Code anzeigen</button>
+            <button id="btnShareSetup" class="btn ghost">Link teilen</button>
+          </div>
+          <p class="muted small">QR-Code und Link enthalten URL und Schlüssel – nur Mitsammlern zeigen.</p>
+        </div>
         <div id="setResult" class="preview"></div>
       </details>
 
@@ -188,6 +194,21 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <!-- QR-Code-Dialog -->
+  <dialog id="qrDialog" class="qr-dialog">
+    <form method="dialog" class="qr-inner">
+      <h2>Handy verbinden</h2>
+      <div id="qrBox" class="qr-box" aria-label="QR-Code mit Einrichtungslink"></div>
+      <ol class="qr-steps">
+        <li>Am anderen Handy die <b>Kamera-App</b> öffnen und auf den Code richten.</li>
+        <li>Den erkannten Link antippen – er öffnet sich in Chrome und ist sofort verbunden.</li>
+        <li>Namen eintragen, dann <b>⋮ → App installieren</b>.</li>
+      </ol>
+      <button class="btn primary" value="close">Fertig</button>
+    </form>
+  </dialog>
+
+  <script src="vendor/qrcode.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

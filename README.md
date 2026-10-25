@@ -8,7 +8,7 @@ Ein Google Sheet dient als Datenbank, dadurch sind alle Handys synchron. Kostenl
 <img src="screenshots/fehlliste.png" width="200"> <img src="screenshots/statistik.png" width="200">
 </p>
 
-**Funktionen:** Katalog zum Abhaken (Reihen mit „von–bis“ anlegen) · Schnellmodus · Fehlliste, Wunschliste, Doppelte (als Text kopierbar) · Zustand & Notizen · Statistik je Reihe · Import aus kommagetrennten Listen (z. B. von einer KI aus Fotos) · Titel-Import · CSV-Export · Einrichtungslink für weitere Handys · Demo-Modus · Hell/Dunkel.
+**Funktionen:** Katalog zum Abhaken (Reihen mit „von–bis“ anlegen) · Schnellmodus · Fehlliste, Wunschliste, Doppelte (als Text kopierbar) · Zustand & Notizen · Statistik je Reihe · Import aus kommagetrennten Listen (z. B. von einer KI aus Fotos) · Titel-Import · CSV-Export · QR-Code / Link zum Verbinden weiterer Handys · Demo-Modus · Hell/Dunkel.
 
 ## Aufbau
 
@@ -62,8 +62,11 @@ Das Repo enthält keine geheimen Daten – URL und Schlüssel werden erst in der
 
 ## 4. Weitere Handys
 
-Auf dem eingerichteten Handy: **Mehr → Einstellungen → „Einrichtungslink teilen“** → per WhatsApp o. ä. schicken.
-Auf dem anderen Handy den Link in Chrome öffnen → ist sofort verbunden → Namen eintragen → „App installieren“.
+Auf dem eingerichteten Handy: **Mehr → Einstellungen → „QR-Code anzeigen“**.
+Am neuen Handy die **Kamera-App** auf den Code richten → Link antippen → öffnet sich in Chrome und ist sofort verbunden → Namen eintragen → **⋮ → App installieren**.
+
+Nicht im selben Raum? **„Link teilen“** schickt denselben Einrichtungslink z. B. per WhatsApp.
+QR-Code und Link enthalten URL und Schlüssel – nur Mitsammlern zeigen.
 
 ## 5. Katalog & Bestand befüllen
 
