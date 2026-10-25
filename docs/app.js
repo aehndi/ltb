@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const LS_SETTINGS = 'ltb.settings';
 const LS_CACHE = 'ltb.cache';
 const LS_UI = 'ltb.ui';
@@ -320,7 +320,7 @@ function renderMehr() {
     $('#setKey').value = s.url === DEMO_URL ? '' : s.key;
     $('#setUser').value = s.user;
   }
-  $('#btnShareSetup').hidden = !s.url || s.url === DEMO_URL;
+  $('#setupShare').hidden = !s.url || s.url === DEMO_URL;
   $('#versionLine').textContent = 'Version ' + APP_VERSION + (s.url === DEMO_URL ? ' · Demo-Modus' : '');
 }
 
@@ -500,6 +500,14 @@ function setupLink() {
   const base = location.href.split('#')[0];
   return base + '#setup=' + b64urlEncode(JSON.stringify({ u: state.settings.url, k: state.settings.key }));
 }
+function showSetupQr() {
+  if (typeof qrcode !== 'function') { toast('QR-Code nicht verfügbar', true); return; }
+  const qr = qrcode(0, 'M');           // Größe automatisch, mittlere Fehlerkorrektur
+  qr.addData(setupLink());
+  qr.make();
+  $('#qrBox').innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
+  $('#qrDialog').showModal();
+}
 function consumeSetupHash() {
   const m = location.hash.match(/setup=([A-Za-z0-9_-]+)/);
   if (!m) return false;
@@ -672,6 +680,9 @@ function bind() {
     if (navigator.share) navigator.share({ title: 'LTB-Sammlung einrichten', text: 'Öffne den Link in Chrome, dann „Zum Startbildschirm hinzufügen“:', url: link }).catch(() => {});
     else toast(await copyText(link) ? 'Link kopiert' : 'Kopieren nicht möglich');
   });
+
+  $('#btnShowQr').addEventListener('click', showSetupQr);
+  $('#qrDialog').addEventListener('click', e => { if (e.target.id === 'qrDialog') e.target.close(); });
 
   // Export
   $('#btnExport').addEventListener('click', () => {
