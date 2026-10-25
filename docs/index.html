@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LTB-Sammlung</title>
+  <meta name="theme-color" content="#ffc928">
+  <meta name="description" content="Bestand an Lustigen Taschenbüchern verwalten – synchronisiert über Google Sheets.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>LTB-Sammlung</h1>
+    <div class="topbar-right">
+      <span id="syncState" class="sync" title="Synchronisierung"></span>
+      <button id="btnRefresh" class="icon-btn" aria-label="Neu laden" title="Neu laden">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main id="main">
+    <!-- Sammlung -->
+    <section id="view-sammlung" class="view">
+      <div class="controls">
+        <div class="search-row">
+          <input id="search" type="search" placeholder="Nr. oder Titel …" autocomplete="off" inputmode="search">
+          <label class="quick" title="Antippen schaltet direkt zwischen 'hab ich' und 'fehlt' um">
+            <input type="checkbox" id="quickMode"> <span>Schnell&shy;modus</span>
+          </label>
+        </div>
+        <div id="seriesChips" class="chips" role="tablist" aria-label="Reihe"></div>
+        <div class="seg" id="stateFilter" role="tablist" aria-label="Filter">
+          <button data-f="alle" class="on">Alle</button>
+          <button data-f="habe">Habe</button>
+          <button data-f="fehlt">Fehlt</button>
+          <button data-f="wunsch">Wunsch</button>
+          <button data-f="doppelt">Doppelt</button>
+        </div>
+        <div id="countLine" class="countline"></div>
+      </div>
+      <div id="grid" class="grid"></div>
+      <div id="emptyHint" class="empty" hidden></div>
+    </section>
+
+    <!-- Listen -->
+    <section id="view-listen" class="view" hidden>
+      <div class="seg" id="listType" role="tablist" aria-label="Liste">
+        <button data-l="fehlt" class="on">Fehlliste</button>
+        <button data-l="wunsch">Wunschliste</button>
+        <button data-l="doppelt">Doppelte</button>
+      </div>
+      <div class="list-actions">
+        <button id="btnCopyList" class="btn">Als Text kopieren</button>
+        <button id="btnShareList" class="btn ghost" hidden>Teilen</button>
+      </div>
+      <div id="listOut" class="listout"></div>
+    </section>
+
+    <!-- Statistik -->
+    <section id="view-statistik" class="view" hidden>
+      <div id="statTiles" class="stat-tiles"></div>
+      <h2 class="h2">Vollständigkeit je Reihe</h2>
+      <div id="statSeries"></div>
+      <h2 class="h2">Zuletzt geändert</h2>
+      <ul id="statRecent" class="recent"></ul>
+    </section>
+
+    <!-- Mehr -->
+    <section id="view-mehr" class="view" hidden>
+      <details class="card" id="cardImport" open>
+        <summary>Bestand importieren</summary>
+        <p class="muted">Nummern kommagetrennt einfügen, z.&nbsp;B. <code>1, 2, 5-9, 12</code> oder mit Reihe: <code>LTB 12, Spezial 45, LTB 12</code>. Mehrfach genannte Bände zählen als Doppelte. Vorhandene Anzahlen werden nie verringert.</p>
+        <label>Standard-Reihe (für Nummern ohne Reihe)
+          <select id="impSeries"></select>
+        </label>
+        <textarea id="impText" rows="5" placeholder="1, 2, 3, 7, 12-15, Spezial 45 …"></textarea>
+        <div class="row">
+          <button id="btnImpPreview" class="btn">Prüfen</button>
+          <button id="btnImpGo" class="btn primary" disabled>Importieren</button>
+        </div>
+        <div id="impPreview" class="preview"></div>
+        <details class="sub">
+          <summary>Prompt für die KI (Fotos → Liste)</summary>
+          <pre id="aiPrompt" class="prompt">Auf den Fotos sind Rücken bzw. Cover von „Lustiges Taschenbuch“-Bänden. Lies bei jedem Band Reihe und Nummer ab. Reihen: „LTB“ für die normale Hauptreihe, sonst den Reihennamen (z. B. „Spezial“, „Enten-Edition“). Gib NUR eine kommagetrennte Liste aus, im Format „Reihe Nummer“, z. B.: LTB 12, LTB 13, Spezial 45. Doppelt vorhandene Bände bitte auch doppelt auflisten. Unsichere Nummern mit ? markieren.</pre>
+          <button id="btnCopyPrompt" class="btn ghost">Prompt kopieren</button>
+        </details>
+      </details>
+
+      <details class="card" id="cardSeries">
+        <summary>Katalog: Reihe anlegen</summary>
+        <p class="muted">Legt alle Nummern einer Reihe als „fehlt“ an, damit du nur noch abhaken musst. Bereits vorhandene Bände bleiben unverändert – du kannst also später einfach die neuen Nummern ergänzen.</p>
+        <label>Name der Reihe <input id="serName" list="seriesList" placeholder="z. B. LTB oder LTB Spezial"></label>
+        <datalist id="seriesList"></datalist>
+        <div class="row">
+          <label>von <input id="serFrom" type="number" inputmode="numeric" value="1" min="0"></label>
+          <label>bis <input id="serTo" type="number" inputmode="numeric" placeholder="z. B. 600" min="0"></label>
+        </div>
+        <button id="btnAddSeries" class="btn primary">Anlegen</button>
+      </details>
+
+      <details class="card">
+        <summary>Katalog: Titel importieren</summary>
+        <p class="muted">Eine Zeile pro Band: <code>Nr; Titel</code> (Standard-Reihe) oder <code>Reihe; Nr; Titel</code>. Tabulator statt Semikolon geht auch – also direkt aus einer Tabelle kopierbar.</p>
+        <label>Standard-Reihe <select id="katSeries"></select></label>
+        <textarea id="katText" rows="5" placeholder="1; Der Kolumbusfalter&#10;2; …"></textarea>
+        <button id="btnKatImport" class="btn primary">Titel importieren</button>
+        <div id="katResult" class="preview"></div>
+      </details>
+
+      <details class="card" id="cardSettings">
+        <summary>Einstellungen</summary>
+        <label>Web-App-URL (Apps Script) <input id="setUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></label>
+        <label>API-Schlüssel <input id="setKey" autocomplete="off" placeholder="aus dem Blatt „Einstellungen“"></label>
+        <label>Dein Name (wird bei Änderungen vermerkt) <input id="setUser" placeholder="z. B. Andreas" autocomplete="nickname"></label>
+        <div class="row">
+          <button id="btnSaveSettings" class="btn primary">Speichern &amp; testen</button>
+          <button id="btnDemo" class="btn ghost">Demo-Modus</button>
+        </div>
+        <button id="btnShareSetup" class="btn ghost">Einrichtungslink für weitere Handys teilen</button>
+        <p class="muted small">Der Link enthält URL und Schlüssel – nur an Mitsammler schicken.</p>
+        <div id="setResult" class="preview"></div>
+      </details>
+
+      <details class="card">
+        <summary>Export</summary>
+        <p class="muted">Alle Daten als CSV (z. B. als Backup). Die eigentlichen Daten liegen ohnehin im Google Sheet.</p>
+        <button id="btnExport" class="btn">CSV herunterladen</button>
+      </details>
+      <p class="muted small center" id="versionLine"></p>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Navigation">
+    <button data-view="sammlung" class="on">
+      <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h4v16H4zm6 0h4v16h-4zm6.6.9 3.8-1.3 5 15-3.8 1.3z" transform="scale(.92) translate(1 1)"/></svg>
+      <span>Sammlung</span></button>
+    <button data-view="listen">
+      <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 6h2v2H4zm4 0h12v2H8zm-4 5h2v2H4zm4 0h12v2H8zm-4 5h2v2H4zm4 0h12v2H8z"/></svg>
+      <span>Listen</span></button>
+    <button data-view="statistik">
+      <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 20V10h3v10zm6.5 0V4h3v16zM17 20v-7h3v7z"/></svg>
+      <span>Statistik</span></button>
+    <button data-view="mehr">
+      <svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+      <span>Mehr</span></button>
+  </nav>
+
+  <!-- Detail-Dialog -->
+  <dialog id="detail" class="sheet">
+    <form method="dialog" class="sheet-inner" id="detailForm">
+      <div class="sheet-head">
+        <div>
+          <div id="dSeries" class="muted small"></div>
+          <div id="dNr" class="dnr"></div>
+        </div>
+        <button class="icon-btn" value="close" aria-label="Schließen">✕</button>
+      </div>
+      <input id="dTitle" class="dtitle" placeholder="Titel (optional)">
+      <div class="own-row">
+        <button type="button" id="dOwn" class="own-toggle"></button>
+        <div class="stepper" aria-label="Anzahl">
+          <button type="button" id="dMinus" aria-label="weniger">−</button>
+          <output id="dCount">0</output>
+          <button type="button" id="dPlus" aria-label="mehr">+</button>
+        </div>
+      </div>
+      <button type="button" id="dWish" class="wish-toggle"></button>
+      <label>Zustand
+        <select id="dCond">
+          <option value="">–</option>
+          <option>Neuwertig</option>
+          <option>Sehr gut</option>
+          <option>Gut</option>
+          <option>Gebraucht</option>
+          <option>Schlecht</option>
+        </select>
+      </label>
+      <label>Notiz <textarea id="dNote" rows="2" placeholder="z. B. Erstauflage, signiert, im Keller …"></textarea></label>
+      <div id="dMeta" class="muted small"></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

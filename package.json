@@ -1,0 +1,14 @@
+{
+  "name": "ltb-sammlung",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PWA zum Verwalten einer Sammlung Lustiger Taschenbücher mit Google Sheets als Datenbank",
+  "scripts": {
+    "test": "node tests/unit.js",
+    "serve": "node tests/server.js",
+    "e2e": "node tests/e2e.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}
